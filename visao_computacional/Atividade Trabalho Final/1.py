@@ -5,60 +5,51 @@ import math
 
 
 #------------------- IMAGEM ORIGINAL -------------------
-img = cv.imread('entrada.jpg')
+img = cv.imread('alcohol-dehydrogenase.png')
 
 
-#------------------- IMAGEM EM TONS DE CINZA -------------------
-imgGray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
+#------------------- SEGMENTAÇÃO PELA COR -------------------
+
+hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV) # converte para HSV
+blur = cv.medianBlur(hsv, 5) # aplica o filtro de mediana para remoção de ruídos
+lower = np.array([0, 0, 90]) # valor limite de cor mínimo
+upper = np.array([0, 255, 255]) # valor limite de cor máximo
+mask = cv.inRange(blur, lower, upper) # define a máscara
+seg = cv.bitwise_and(img, img, mask=mask) # aplica a máscara na imagem original
 
 
-#------------------- NEGATIVO DA IMAGEM -------------------
+#------------------- SISTEMAS DE CORES -------------------
 
-# negative = cv.bitwise_not(imgGray)
-# negative = -imgGray
-
-negative = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
-for y in range(0, negative.shape[0]):
-  for x in range(0, negative.shape[1]):
-    negative[y, x] = 255 - negative[y, x]
+gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY) # preto e branco (tons de cinza)
+hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV) # sistema HSV
+lab = cv.cvtColor(img, cv.COLOR_BGR2LAB) # sistema L*a*b*
 
 
-#------------------- NORMALIZAÇÃO DO CONTRASTE -------------------
+#------------------- FILTROS -------------------
 
-contrast = cv.equalizeHist(imgGray)
-
-# contrast = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
-# a = 0
-# b = 255
-# c = 100
-# d = 200
-# for y in range(0, contrast.shape[0]):
-#   for x in range(0, contrast.shape[1]):
-#     contrast[y, x] = (contrast[y, x] - a) * ((d-c)/(b-a)) + c
+blurred = cv.blur(img, (5,5))
+median = cv.medianBlur(img, 5)
+gaussian = cv.GaussianBlur(img, (5,5), 0)
 
 
-#------------------- CORREÇÃO GAMA -------------------
+#------------------- REALCE -------------------
 
-gamma = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
-c = 3
-y_value = 0.8
-for y in range(0, gamma.shape[0]):
-  for x in range(0, gamma.shape[1]):
-    gamma[y, x] = c * gamma[y, x] ** y_value
-
-
-#------------------- REALCE LOGARÍTIMICO-------------------
-
-realce = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
+realce = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 for y in range(0, realce.shape[0]):
   for x in range(0, realce.shape[1]):
-    realce[y, x] = (255/(math.log(255, 10))) * (math.log(realce[y, x] + 1, 10))
+    realce[y, x] = (255/(math.log(255, 10))) * (math.log(realce[y, x] + 1, 10)) # realce logarítmico
+
+
+#------------------- RESULTADOS -------------------
 
 cv.imshow('Original', img)
-cv.imshow('Gray', imgGray)
-cv.imshow('Negative', negative)
-cv.imshow('contrast', contrast)
-cv.imshow('gamma', gamma)
+cv.imshow('Segmentacao', seg)
+cv.imshow('tons de cinza', gray)
+cv.imshow('HSV', hsv)
+cv.imshow('L*a*b*', lab)
+cv.imshow('blurred', blurred)
+cv.imshow('median', median)
+cv.imshow('gaussian', gaussian)
 cv.imshow('realce', realce)
 
 cv.waitKey()
